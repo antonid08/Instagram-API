@@ -16,6 +16,7 @@ class V2InboxResponse(Response):
             self.pending_requests_users = response['pending_requests_users']
             self.inbox = Inbox(response['inbox'])
             self.subscription = response['subscription']
+
         else:
             self.setMessage(response['message'])
 

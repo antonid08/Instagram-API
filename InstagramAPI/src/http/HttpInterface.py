@@ -62,11 +62,25 @@ class HttpInterface(object):
             ch.setopt(pycurl.POSTFIELDS, post)
 
         if self.parent.proxy:
+            ch.setopt(pycurl.IPRESOLVE, pycurl.IPRESOLVE_WHATEVER)
             ch.setopt(pycurl.PROXY, self.parent.proxyHost)
             if self.parent.proxyAuth:
                 ch.setopt(pycurl.PROXYUSERPWD, self.parent.proxyAuth)
 
-        ch.perform()
+        # костыль для отлова 'Tls packet with unexpected length was received'
+        while True:
+            try:
+                ch.perform()
+                break;
+            except Exception as e:
+                # код нужной ошибки
+                if e.args[0] == 56 or e.args[0] == 18:
+                    buffer = BytesIO()
+                    ch.setopt(pycurl.WRITEFUNCTION, buffer.write)
+                    continue
+                else:
+                    raise e
+
         resp = buffer.getvalue().decode("utf-8")
         header_len = ch.getinfo(pycurl.HEADER_SIZE)
         header = resp[0: header_len]
@@ -93,7 +107,13 @@ class HttpInterface(object):
                 print(Utils.colouredString('RESPONSE: ', 'cyan') + body + "\n")
 
         ch.close()
-        return [header, json.loads(body)]
+        response_dict = {}
+        try:
+            response_dict = json.loads(body)
+        except ValueError as e:
+            return self.request(endpoint, post, login)
+
+        return [header, response_dict]
 
     def uploadPhoto(self, photo, caption=None, upload_id=None, customPreview=None, location=None, filter_=None,
                     reel_flag=False):
@@ -173,10 +193,10 @@ class HttpInterface(object):
         ch.setopt(pycurl.POST, True)
         ch.setopt(pycurl.POSTFIELDS, data)
 
-        if self.parent.proxy:
-            ch.setopt(pycurl.PROXY, self.parent.proxyHost)
-            if self.parent.proxyAuth:
-                ch.setopt(pycurl.PROXYUSERPWD, self.parent.proxyAuth)
+        #if self.parent.proxy:
+        #    ch.setopt(pycurl.PROXY, self.parent.proxyHost)
+        #    if self.parent.proxyAuth:
+        #        ch.setopt(pycurl.PROXYUSERPWD, self.parent.proxyAuth)
 
         ch.perform()
         resp = buffer.getvalue()

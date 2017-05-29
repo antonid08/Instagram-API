@@ -53,7 +53,7 @@ class Instagram:
         self.proxyHost = None  # Proxy Host and Port
         self.proxyAuth = None  # Proxy User and Pass
 
-        self.debug = debug
+        self.debug = True #debug
         self.truncatedDebug = truncatedDebug
         self.device_id = SignatureUtils.generateDeviceId(hashlib.md5((username + password).encode("utf-8")))
 
@@ -146,16 +146,20 @@ class Instagram:
         if proxy == '':
             return
 
-        proxy = parse_url(proxy)
+        # proxy = parse_url(proxy)
+        host = proxy
 
-        if port and isinstance(port, int):
-            proxy['port'] = int(port)
+        proxy = {}
+        proxy['host'] = host
+
+        if port:
+            proxy['port'] = port
 
         if username and password:
             proxy['user'] = username
             proxy['pass'] = password
 
-        if proxy['host'] and proxy['port'] and isinstance(proxy['port'], int):
+        if proxy['host'] and proxy['port']:
             self.proxyHost = proxy['host'] + ':' + proxy['port']
         else:
             raise InstagramException('Proxy host error. Please check ip address and port of proxy.')
@@ -210,17 +214,6 @@ class Instagram:
             if match: self.token = match.group(1)
             self.settings.set('token', self.token)
 
-            self.syncFeatures()
-            self.autoCompleteUserList()
-            self.timelineFeed()
-            self.getRankedRecipients()
-            self.getRecentRecipients()
-            self.megaphoneLog()
-            self.getv2Inbox()
-            self.getRecentActivity()
-            self.getReelsTrayFeed()
-            self.explore()
-
             return response
 
         check = self.timelineFeed()
@@ -228,16 +221,6 @@ class Instagram:
         if check.getMessage() == 'login_required':
             self.login(True)
 
-        self.autoCompleteUserList()
-        self.getReelsTrayFeed()
-        self.getRankedRecipients()
-        # push register
-        self.getRecentRecipients()
-        # push register
-        self.megaphoneLog()
-        self.getv2Inbox()
-        self.getRecentActivity()
-        self.explore()
 
     def syncFeatures(self, prelogin=False):
         if prelogin:
@@ -439,7 +422,7 @@ class Instagram:
         """
         self.http.direct_message(recipients, text)
 
-    def directThread(self, threadId):
+    def directThread(self, threadId, cursorId=None):
         """
         Direct Thread Data
 
@@ -448,7 +431,8 @@ class Instagram:
         :rtype: object
         :return: Direct Thread Data
         """
-        directThread = self.http.request("direct_v2/threads/" + str(threadId) + "/?")[1]
+        directThread = self.http.request('direct_v2/threads/' + str(threadId) + '/?' + (('cursor=' + cursorId) if
+                                                                                       cursorId is not None else ''))[1]
 
         if directThread['status'] != 'ok':
             raise InstagramException(directThread['message'] + "\n")
@@ -936,13 +920,14 @@ class Instagram:
 
         return activity
 
-    def getv2Inbox(self):
+    def getv2Inbox(self, cursor_id = None):
         """
         I dont know this yet.
         :rtype: object
         :return: v2 inbox data
         """
-        inbox = V2InboxResponse(self.http.request('direct_v2/inbox/?')[1])
+        inbox = V2InboxResponse(self.http.request('direct_v2/inbox/?' + (('cursor=' + cursor_id) if cursor_id is not None
+                                                                         else ''))[1])
 
         if not inbox.isOk():
             raise InstagramException(inbox.getMessage() + "\n")
