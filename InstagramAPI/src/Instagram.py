@@ -53,7 +53,7 @@ class Instagram:
         self.proxyHost = None  # Proxy Host and Port
         self.proxyAuth = None  # Proxy User and Pass
 
-        self.debug = True #debug
+        self.debug = debug #debug
         self.truncatedDebug = truncatedDebug
         self.device_id = SignatureUtils.generateDeviceId(hashlib.md5((username + password).encode("utf-8")))
 
@@ -460,7 +460,7 @@ class Instagram:
         )
         return self.http.request(
             "direct_v2/threads/" + str(threadId) + "/" + str(threadAction) + "/",
-            self.generateSignature(data)  # todo Unresolved reference
+            SignatureUtils.generateSignature(data)  # todo Unresolved reference
         )[1]
 
     def configureVideo(self, upload_id, video, caption='', customPreview=None):
