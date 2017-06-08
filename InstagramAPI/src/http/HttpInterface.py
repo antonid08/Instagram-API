@@ -56,6 +56,7 @@ class HttpInterface(object):
             ch.setopt(pycurl.POST, True)
             ch.setopt(pycurl.POSTFIELDS, post)
 
+
         if self.parent.proxy:
             ch.setopt(pycurl.IPRESOLVE, pycurl.IPRESOLVE_WHATEVER)
             ch.setopt(pycurl.PROXY, self.parent.proxyHost)
@@ -63,7 +64,12 @@ class HttpInterface(object):
                 ch.setopt(pycurl.PROXYUSERPWD, self.parent.proxyAuth)
 
         # костыль для отлова 'Tls packet with unexpected length was received'
+        safe_counter = 0;
         while True:
+            safe_counter += 1
+            if safe_counter > 5:
+                return
+
             try:
                 ch.perform()
                 break;
