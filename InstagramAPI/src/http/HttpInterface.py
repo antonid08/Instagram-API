@@ -465,6 +465,8 @@ class HttpInterface(object):
         upload = json.loads(resp[header_len:])
         ch.close()
 
+        return upload
+
     def buildBody(self, bodies, boundary):
         body = ''
         for b in bodies:

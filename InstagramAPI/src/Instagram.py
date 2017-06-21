@@ -5,6 +5,7 @@ import time
 import urllib
 from collections import OrderedDict
 from distutils.version import LooseVersion
+from threading import Lock
 
 try:
     from io import BytesIO
@@ -34,6 +35,7 @@ class Instagram:
         :param debug: Debug on or off, False by default.
         :param IGDataPath: Default folder to store data, you can change it.
         """
+
         self.username = None  # // Instagram username
         self.password = None  # // Instagram password
         self.debug = None  # // Debug
@@ -169,13 +171,14 @@ class Instagram:
 
     def login(self, force=False):
         """
-        Login to Instagram.
+        Login to Instagram. Synchronized
 
         :type force: bool
         :param force: Force login to Instagram, this will create a new session
         :return: Login data
         :rtype List:
         """
+
         if (not self.isLoggedIn) or force:
             self.syncFeatures(True)
             fetch = self.http.request(
@@ -184,7 +187,7 @@ class Instagram:
             response = ChallengeResponse(fetch[1])
 
             if not header or not response.isOk():
-                raise InstagramException("Couldn't get challenge, check your connection")
+                raise InstagramException(response.message)
                 # return response #FIXME unreachable code
 
             match = re.search(r'^Set-Cookie: csrftoken=([^;]+)', fetch[0], re.MULTILINE)
@@ -420,7 +423,7 @@ class Instagram:
 
         :return: void
         """
-        self.http.direct_message(recipients, text)
+        return self.http.direct_message(recipients, text)
 
     def directThread(self, threadId, cursorId=None):
         """
