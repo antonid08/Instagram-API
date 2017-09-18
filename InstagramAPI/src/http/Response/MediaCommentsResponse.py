@@ -10,11 +10,18 @@ class MediaCommentsResponse(Response):
             if 'media' in response and response['media']:
                 self.item = Item(response['media'])
 
-            self.comments = response['comments']
-            if response['has_more_comments']:
-                self.has_more = True
-                self.next_max_id = response['next_max_id']
+            if not response.get('comments_disabled', False):
+
+                self.comments = response['comments']
+
+                if response['has_more_comments']:
+                    self.has_more = True
+                    self.next_max_id = response['next_max_id']
+                else:
+                    self.has_more = False
+
             else:
+                self.comments = []
                 self.has_more = False
 
         else:
