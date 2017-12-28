@@ -20,7 +20,7 @@ class FollowerResponse(Response):
             self.setMessage(response['message'])
         self.setStatus(response['status'])
 
-    def getFollowings(self):
+    def getFollowers(self):
         return self.followers
 
     def getNextMaxId(self):
